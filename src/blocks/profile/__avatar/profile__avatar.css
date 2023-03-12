@@ -1,0 +1,18 @@
+.profile__avatar {
+  max-width: 120px;
+  min-height: 120px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: #C4C4C4;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+@media (max-width: 775px) and (min-width: 550px) {
+  .profile__avatar {
+    max-width: 80px;
+    min-height: 80px;
+  }
+}
