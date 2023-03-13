@@ -1,11 +1,11 @@
-import React from "react";
-import { Route, Routes, Navigate} from 'react-router-dom';
-
+import React, { useEffect } from "react";
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import Main from './Main';
 import Footer from './Footer';
 import ImagePopup from './ImagePopup';
 import api from "../utils/Api";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
+import Header from "./Header";
 import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup ";
@@ -13,29 +13,27 @@ import ConfirmPopup from "./ConfirmPopup";
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRouteElement from "./ProtectedRoute";
+import * as auth from "../utils/Auth.js";
 
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isEditProfilePopupOpen: false,
-      isAddPlacePopupOpen: false,
-      isEditAvatarPopupOpen: false,
-      isConfirmPopupOpen: false,
-      selectedCard: {},
-      currentUser: {},
-      cards: [],
-      cardToDelete: {},
-      isLoading: false,
-      loggedIn: false
-    }
-  }
-
-  componentDidMount() {
+const App = () => {
+  const [isEditProfilePopupOpen, setisEditProfilePopupOpen] = React.useState(false);
+  const [isAddPlacePopupOpen, setisAddPlacePopupOpen] = React.useState(false);
+  const [isEditAvatarPopupOpen, setisEditAvatarPopupOpen] = React.useState(false);
+  const [isConfirmPopupOpen, setisConfirmPopupOpen] = React.useState(false);
+  const [selectedCard, setselectedCard] = React.useState({});
+  const [currentUser, setcurrentUser] = React.useState({});
+  const [cards, setcards] = React.useState([]);
+  const [cardToDelete, setcardToDelete] = React.useState({});
+  const [isLoading, setisLoading] = React.useState(false);
+  const [loggedIn, setloggedIn] = React.useState(false);
+  const [header, setheader] = React.useState({ text: "Войти", link: "/sign-in" });
+  const navigate = useNavigate();
+  useEffect(() => {
+    handleTokenCheck();
     api.getUserInfo()
       .then((data) => {
-        this.setState({ currentUser: data })
+        setcurrentUser(data)
       })
       .catch((err) => console.log(err))
     api.getCardsInfo()
@@ -50,27 +48,44 @@ class App extends React.Component {
             ownerId: card.owner._id
           }
         })
-        this.setState({ cards: newCards })
+        setcards(newCards)
       })
       .catch((err) => console.log(err))
+  }, [])
+
+  const handleTokenCheck = () => {
+    if (localStorage.getItem('jwt')) {
+      const jwt = localStorage.getItem('jwt');
+      auth.checkToken(jwt)
+        .then((res) => {
+          if (res) {
+            setloggedIn(true);
+            navigate("/main", { replace: true })
+          }
+        })
+
+    };
   }
 
-  handleEditAvatarClick = () => {
-    this.setState({ isEditAvatarPopupOpen: true })
+
+
+  const handleEditAvatarClick = () => {
+    setisEditAvatarPopupOpen(true)
   }
 
-  handleEditProfileClick = () => {
-    this.setState({ isEditProfilePopupOpen: true })
-  }
-  handleAddPlaceClick = () => {
-    this.setState({ isAddPlacePopupOpen: true })
+  const handleEditProfileClick = () => {
+    setisEditProfilePopupOpen(true)
   }
 
-  handleCardClick = (data) => {
-    this.setState({ selectedCard: data })
+  const handleAddPlaceClick = () => {
+    setisAddPlacePopupOpen(true)
   }
 
-  setCard = (data) => {
+  const handleCardClick = (data) => {
+    setselectedCard(data)
+  }
+
+  const setCard = (data) => {
     const newCard = {
       _id: data._id,
       link: data.link,
@@ -82,69 +97,67 @@ class App extends React.Component {
     const newCards = this.state.cards.map((item) => {
       if (item._id === data._id) { return newCard } else { return item }
     })
-    this.setState({ cards: newCards })
+    setcards(newCards)
   }
 
-  handleCardLike = (card) => {
-    const isLiked = card.likes.some(i => i._id === this.state.currentUser._id);
+  const handleCardLike = (card) => {
+    const isLiked = card.likes.some(i => i._id === currentUser._id);
     if (isLiked) {
       api.deleteLike(card._id)
         .then((data) => {
-          this.setCard(data)
+          setCard(data)
         })
         .catch((err) => console.log(err))
     } else {
       api.putLike(card._id)
         .then((data) => {
-          this.setCard(data)
+          setCard(data)
         })
         .catch((err) => console.log(err))
     }
   }
 
-  handleCardDelete = (card) => {
-    this.setState({
-      isConfirmPopupOpen: true,
-      cardToDelete: card
-    })
+  const handleCardDelete = (card) => {
+    setisConfirmPopupOpen(true)
+    setcardToDelete(card)
   }
 
-  handleConfirmSubmit = (card) => {
-    this.setState({ isLoading: true })
+  const handleConfirmSubmit = (card) => {
+    setisLoading(true)
     api.deleteCard(card._id)
       .then((data) => {
-        const newCards = this.state.cards.filter(item => item._id !== card._id);
-        this.setState({ cards: newCards });
-        this.closeAllPopups();
+        const newCards = cards.filter(item => item._id !== card._id);
+        setcards(newCards);
+        closeAllPopups();
       })
       .catch((err) => console.log(err))
-      .finally(() => { this.setState({ isLoading: false }) })
+      .finally(() => { setisLoading(false) })
   }
 
-  handleUpdateUser = (name, about) => {
-    this.setState({ isLoading: true })
+  const handleUpdateUser = (name, about) => {
+    setisLoading(true);
     api.patchUserInfo(name, about)
       .then((data) => {
-        this.setState({ currentUser: data });
-        this.closeAllPopups();
+        setcurrentUser(data);
+        closeAllPopups();
       })
       .catch((err) => console.log(err))
-      .finally(() => { this.setState({ isLoading: false }) })
+      .finally(() => { setisLoading(false) })
   }
 
-  handleUpdateAvatar = (newAvatar) => {
-    this.setState({ isLoading: true })
+  const handleUpdateAvatar = (newAvatar) => {
+    setisLoading(true);
     api.pacthAvatarImg(newAvatar)
       .then((data) => {
-        this.setState(prevState => ({ currentUser: { ...prevState.currentUser, avatar: data.avatar } }));
-        this.closeAllPopups();
+        setcurrentUser({ ...currentUser, avatar: data.avatar })
+        closeAllPopups();
       })
       .catch((err) => console.log(err))
-      .finally(() => { this.setState({ isLoading: false }) })
+      .finally(() => { setisLoading(false) })
   }
 
-  handleAddPlace = (name, link) => {
-    this.setState({ isLoading: true })
+  const handleAddPlace = (name, link) => {
+    setisLoading(true);
     api.addNewCard(name, link)
       .then((data) => {
         const newCard = {
@@ -155,79 +168,77 @@ class App extends React.Component {
           likesCount: data.likes.length,
           ownerId: data.owner._id
         }
-        this.setState(prevState => ({ cards: [newCard, ...prevState.cards] }))
-        this.closeAllPopups();
+        setcards([newCard, ...cards])
+        closeAllPopups();
       })
       .catch((err) => console.log(err))
-      .finally(() => { this.setState({ isLoading: false }) })
+      .finally(() => { setisLoading(false) })
   }
 
-  closeAllPopups = () => {
-    this.setState({
-      isEditProfilePopupOpen: false,
-      isAddPlacePopupOpen: false,
-      isEditAvatarPopupOpen: false,
-      isConfirmPopupOpen: false,
-      selectedCard: {}
-    })
-  }
-  handleLogin = () => {
-    this.setState({ loggedIn: true })
+  const closeAllPopups = () => {
+    setisEditProfilePopupOpen(false)
+    setisAddPlacePopupOpen(false)
+    setisEditAvatarPopupOpen(false)
+    setisConfirmPopupOpen(false)
+    setselectedCard({})
   }
 
-  render() {
-    return (
-      <CurrentUserContext.Provider value={this.state.currentUser}>
-        <div className="page">
-          
-          <Routes>
-            <Route path="/" element={this.state.loggedIn ? <Navigate to="/main" replace /> : <Navigate to="/sign-up" replace />} />
-            <Route path="/main" element={<ProtectedRouteElement
-              element={
-                <Main cards={this.state.cards}
-                  onEditProfile={this.handleEditProfileClick}
-                  onAddPlace={this.handleAddPlaceClick}
-                  onEditAvatar={this.handleEditAvatarClick}
-                  onCardClick={this.handleCardClick}
-                  onLikeClick={this.handleCardLike}
-                  onCardDelete={this.handleCardDelete}
-                />
-              }
-              loggedIn={this.state.loggedIn}/>} /> 
-            <Route path="/sign-up" element={<Register />} />
-            <Route path="/sign-in" element={<Login handleLogin={this.handleLogin} />} />
-          </Routes>
-          <Footer />
-          <EditProfilePopup
-            isOpen={this.state.isEditProfilePopupOpen}
-            onClose={this.closeAllPopups}
-            onUpdateUser={this.handleUpdateUser}
-            isLoading={this.state.isLoading}
-          />
-          <AddPlacePopup
-            isOpen={this.state.isAddPlacePopupOpen}
-            onClose={this.closeAllPopups}
-            onAddPlace={this.handleAddPlace}
-            isLoading={this.state.isLoading}
-          />
-          <EditAvatarPopup
-            isOpen={this.state.isEditAvatarPopupOpen}
-            onClose={this.closeAllPopups}
-            onUpdateAvatar={this.handleUpdateAvatar}
-            isLoading={this.state.isLoading}
-          />
-          <ConfirmPopup
-            isOpen={this.state.isConfirmPopupOpen}
-            onClose={this.closeAllPopups}
-            onConfirmSubmit={this.handleConfirmSubmit}
-            cardToDelete={this.state.cardToDelete}
-            isLoading={this.state.isLoading}
-          />
-          <ImagePopup card={this.state.selectedCard} onClose={this.closeAllPopups} />
-        </div>
-      </CurrentUserContext.Provider >
-    )
-  };
-}
+  const handleLogin = () => {
+    setloggedIn(true)
+  }
+
+  return (
+    <CurrentUserContext.Provider value={currentUser}>
+      <div className="page">
+        <Header content={header} />
+        <Routes>
+          <Route path="/" element={loggedIn ? <Navigate to="/main" replace /> : <Navigate to="/sign-up" replace />} />
+          <Route path="/main" element={<ProtectedRouteElement
+            element={
+              Main} cards={cards}
+            onEditProfile={handleEditProfileClick}
+            onAddPlace={handleAddPlaceClick}
+            onEditAvatar={handleEditAvatarClick}
+            onCardClick={handleCardClick}
+            onLikeClick={handleCardLike}
+            onCardDelete={handleCardDelete}
+
+
+            loggedIn={loggedIn} />} />
+          <Route path="/sign-up" element={<Register />} />
+          <Route path="/sign-in" element={<Login handleLogin={handleLogin} />} />
+        </Routes>
+        <Footer />
+        <EditProfilePopup
+          isOpen={isEditProfilePopupOpen}
+          onClose={closeAllPopups}
+          onUpdateUser={handleUpdateUser}
+          isLoading={isLoading}
+        />
+        <AddPlacePopup
+          isOpen={isAddPlacePopupOpen}
+          onClose={closeAllPopups}
+          onAddPlace={handleAddPlace}
+          isLoading={isLoading}
+        />
+        <EditAvatarPopup
+          isOpen={isEditAvatarPopupOpen}
+          onClose={closeAllPopups}
+          onUpdateAvatar={handleUpdateAvatar}
+          isLoading={isLoading}
+        />
+        <ConfirmPopup
+          isOpen={isConfirmPopupOpen}
+          onClose={closeAllPopups}
+          onConfirmSubmit={handleConfirmSubmit}
+          cardToDelete={cardToDelete}
+          isLoading={isLoading}
+        />
+        <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+      </div>
+    </CurrentUserContext.Provider >
+  )
+};
+
 
 export default App;
