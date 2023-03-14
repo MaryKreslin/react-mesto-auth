@@ -20,18 +20,7 @@ const Login = ({ handleLogin }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formValue.email || !formValue.password) {
-            return;
-        }
-        auth.authorize(formValue.password, formValue.email)
-            .then((data) => {
-                if (data.token) {
-                    setFormValue({ email: '', password: '' });
-                    handleLogin();
-                    navigate('/main', { replace: true });
-                }
-            })
-            .catch(err => console.log(err));
+        handleLogin(formValue.email, formValue.password)
     }
     return (
         <>

@@ -13,6 +13,7 @@ import ConfirmPopup from "./ConfirmPopup";
 import Register from "./Register";
 import Login from "./Login";
 import ProtectedRouteElement from "./ProtectedRoute";
+import InfoTooltip from "./InfoTooltip";
 import * as auth from "../utils/Auth.js";
 
 
@@ -21,14 +22,18 @@ const App = () => {
   const [isAddPlacePopupOpen, setisAddPlacePopupOpen] = React.useState(false);
   const [isEditAvatarPopupOpen, setisEditAvatarPopupOpen] = React.useState(false);
   const [isConfirmPopupOpen, setisConfirmPopupOpen] = React.useState(false);
+  const [isInfoTooltipOpen, setisInfoTooltipOpen] = React.useState(false);
   const [selectedCard, setselectedCard] = React.useState({});
   const [currentUser, setcurrentUser] = React.useState({});
+  const [currentEmail, setcurrentEmail] = React.useState("");
   const [cards, setcards] = React.useState([]);
   const [cardToDelete, setcardToDelete] = React.useState({});
   const [isLoading, setisLoading] = React.useState(false);
   const [loggedIn, setloggedIn] = React.useState(false);
-  const [header, setheader] = React.useState({ text: "Войти", link: "/sign-in" });
+  const [headerType, setheadertype] = React.useState("");
+  const [infoTooltipType, setinfoTooltipType] = React.useState("");
   const navigate = useNavigate();
+
   useEffect(() => {
     handleTokenCheck();
     api.getUserInfo()
@@ -56,18 +61,21 @@ const App = () => {
   const handleTokenCheck = () => {
     if (localStorage.getItem('jwt')) {
       const jwt = localStorage.getItem('jwt');
+      // console.log(jwt)
       auth.checkToken(jwt)
         .then((res) => {
           if (res) {
             setloggedIn(true);
+            setheadertype("main");
+            setcurrentEmail(res.data.email);
             navigate("/main", { replace: true })
           }
         })
-
-    };
+    } else {
+      setheadertype("login")
+      navigate("/sign-in", { replace: true })
+    }
   }
-
-
 
   const handleEditAvatarClick = () => {
     setisEditAvatarPopupOpen(true)
@@ -94,7 +102,7 @@ const App = () => {
       likesCount: data.likes.length,
       ownerId: data.owner._id
     }
-    const newCards = this.state.cards.map((item) => {
+    const newCards = cards.map((item) => {
       if (item._id === data._id) { return newCard } else { return item }
     })
     setcards(newCards)
@@ -180,17 +188,72 @@ const App = () => {
     setisAddPlacePopupOpen(false)
     setisEditAvatarPopupOpen(false)
     setisConfirmPopupOpen(false)
+    setisInfoTooltipOpen(false)
     setselectedCard({})
   }
 
-  const handleLogin = () => {
-    setloggedIn(true)
+  const handleLogin = (email, password) => {
+    if (!email || !password) {
+      return;
+    }
+    auth.authorize(password, email)
+      .then((data) => {
+        if (data.token) {
+          setloggedIn(true);
+          setheadertype("main");
+          setcurrentEmail(email);
+          navigate('/main', { replace: true });
+        }
+      })
+      .catch(err => console.log(err));
+  }
+
+  const headerButtonClick = (type) => {
+    switch (type) {
+      case "register":
+        navigate("/sign-in");
+        setheadertype("login")
+        break;
+      case "login":
+        navigate("/sign-up");
+        setheadertype("register")
+        break;
+      case "main":
+        localStorage.removeItem('jwt');
+        navigate("/sign-in")
+        setheadertype("login")
+        break;
+      default:
+        navigate("");
+        setheadertype("")
+    }
+  }
+  const handleResister = (password, email) => {
+    auth.register(password, email)
+      .then((res) => {
+        if (res.ok) {
+          setinfoTooltipType("success");
+        } else { setinfoTooltipType("failed") }
+        setisInfoTooltipOpen(true)
+      })
+      .catch((err) => console.log(err));
+  }
+
+  const closeInfoTooltip = (type) => {
+    if (type === "success") {
+      navigate('/sign-in', { replace: true });
+    } else {
+      navigate('/sign-up', { replace: true });
+    }
+    closeAllPopups();
   }
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
-      <div className="page">
-        <Header content={header} />
+      <div className="page" >
+        <Header type={headerType} email={currentEmail}
+          handleClick={headerButtonClick}
+        />
         <Routes>
           <Route path="/" element={loggedIn ? <Navigate to="/main" replace /> : <Navigate to="/sign-up" replace />} />
           <Route path="/main" element={<ProtectedRouteElement
@@ -202,10 +265,8 @@ const App = () => {
             onCardClick={handleCardClick}
             onLikeClick={handleCardLike}
             onCardDelete={handleCardDelete}
-
-
             loggedIn={loggedIn} />} />
-          <Route path="/sign-up" element={<Register />} />
+          <Route path="/sign-up" element={<Register onSubmit={handleResister} />} />
           <Route path="/sign-in" element={<Login handleLogin={handleLogin} />} />
         </Routes>
         <Footer />
@@ -235,6 +296,11 @@ const App = () => {
           isLoading={isLoading}
         />
         <ImagePopup card={selectedCard} onClose={closeAllPopups} />
+        <InfoTooltip
+          isOpen={isInfoTooltipOpen}
+          type={infoTooltipType}
+          onClose={closeInfoTooltip}
+        />
       </div>
     </CurrentUserContext.Provider >
   )
