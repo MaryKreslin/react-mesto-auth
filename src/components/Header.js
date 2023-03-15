@@ -19,7 +19,6 @@ const Header = (props) => {
         }
     }, [props.type])
 
-
     const handleButtonClick = () => {
         props.handleClick(props.type)
     }

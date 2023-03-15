@@ -2,7 +2,7 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-}
+  }
 
 .profile__avatar-block::after {
   content: "";

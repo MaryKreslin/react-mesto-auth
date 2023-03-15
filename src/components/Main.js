@@ -4,9 +4,7 @@ import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
 class Main extends React.Component {
   static contextType = CurrentUserContext;
-  constructor(props) {
-    super(props);
-  }
+  
   render() {
     return (
       <main className="content">

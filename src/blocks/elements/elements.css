@@ -3,18 +3,19 @@
     margin: 0 auto;
     padding-top: 50px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, calc((100% - 17px * 2) / 3));
+    grid-template-columns: repeat(auto-fit, 282px);
     gap: 20px 17px;
+    justify-content: center;
 }
 
-@media (max-width: 786px) {
+@media (max-width: 768px) {
     .elements {
         padding-top: 40px;
-        grid-template-columns: repeat(auto-fit, calc((100% - 17px) / 2));
+        
     }
 }
 
-@media (max-width: 425px) {
+@media (max-width: 520px) {
     .elements {
         padding-top: 36px;
         grid-template-columns: 1fr;

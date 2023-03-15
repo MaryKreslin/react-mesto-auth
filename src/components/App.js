@@ -259,8 +259,8 @@ const App = () => {
         <Routes>
           <Route path="/" element={loggedIn ? <Navigate to="/main" replace /> : <Navigate to="/sign-up" replace />} />
           <Route path="/main" element={<ProtectedRouteElement
-            element={
-              Main} cards={cards}
+            element={Main} 
+            cards={cards}
             onEditProfile={handleEditProfileClick}
             onAddPlace={handleAddPlaceClick}
             onEditAvatar={handleEditAvatarClick}
