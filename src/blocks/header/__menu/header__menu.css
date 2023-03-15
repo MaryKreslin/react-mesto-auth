@@ -1,0 +1,9 @@
+.header__menu {
+    width: 24px;
+    height: 18px;
+}
+
+.header__menu:hover {
+    cursor: pointer;
+    opacity: .6;
+}

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+
 import Main from './Main';
 import Footer from './Footer';
 import ImagePopup from './ImagePopup';
@@ -15,9 +16,11 @@ import Login from "./Login";
 import ProtectedRouteElement from "./ProtectedRoute";
 import InfoTooltip from "./InfoTooltip";
 import * as auth from "../utils/Auth.js";
+import Responsive from "./Responsive";
 
 
 const App = () => {
+
   const [isEditProfilePopupOpen, setisEditProfilePopupOpen] = React.useState(false);
   const [isAddPlacePopupOpen, setisAddPlacePopupOpen] = React.useState(false);
   const [isEditAvatarPopupOpen, setisEditAvatarPopupOpen] = React.useState(false);
@@ -61,7 +64,6 @@ const App = () => {
   const handleTokenCheck = () => {
     if (localStorage.getItem('jwt')) {
       const jwt = localStorage.getItem('jwt');
-      // console.log(jwt)
       auth.checkToken(jwt)
         .then((res) => {
           if (res) {
@@ -251,7 +253,7 @@ const App = () => {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page" >
-        <Header type={headerType} email={currentEmail}
+        <Responsive element={Header} type={headerType} email={currentEmail}
           handleClick={headerButtonClick}
         />
         <Routes>
