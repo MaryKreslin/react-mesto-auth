@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 const Header = (props) => {
     const [header, setheader] = React.useState({ linkText: "", link: "", text: "" });
     const [isMenuOpen, setisMenuOpen] = React.useState(false);
+    const [buttonMenuStyle, setbuttonMenuStyle] = React.useState({})
+
     React.useEffect(() => {
         if (props.type === "main") {
             setheader({ linkText: "Выйти", link: "/sign-in", text: props.email })
@@ -19,16 +21,32 @@ const Header = (props) => {
         }
     }, [props.type])
 
+    React.useEffect(() => {
+        if (!isMenuOpen) {
+            setbuttonMenuStyle({
+                backgroundImage: `url(${menu})`,
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: "contain",
+                width: "24px", height: "24px"
+            })
+        }
+        else {
+            setbuttonMenuStyle({
+                backgroundImage: `url(${close})`,
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: "contain",
+                width: "20px", height: "20px"
+            })
+        }
+    }, [isMenuOpen])
+
     const handleButtonClick = () => {
         props.handleClick(props.type)
     }
-    const handleMenuClick = () => {
-        setisMenuOpen(true)
+    const toggleMenuOpen = () => {
+        setisMenuOpen(!isMenuOpen)
     }
 
-    const handleMenuClose = () => {
-        setisMenuOpen(false)
-    }
     return (
         <>
             {isMenuOpen &&
@@ -47,12 +65,11 @@ const Header = (props) => {
                             <Link className="header__link" to={header.link}>{header.linkText}</Link>
                         </button>
                     </div>}
-                {(props.responsiveInfo.isMobile && !isMenuOpen) &&
-                    <img className="header__menu" src={menu} alt="Меню" onClick={handleMenuClick} />
+                {props.responsiveInfo.isMobile &&
+                    <button className="header__menu"
+                        style={buttonMenuStyle}
+                        onClick={toggleMenuOpen} />
                 }
-                {(props.responsiveInfo.isMobile && isMenuOpen) &&
-                    <img className="header__menu" src={close} alt="Закрыть" onClick={handleMenuClose} />}
-
             </header>
         </>
     )

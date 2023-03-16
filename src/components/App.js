@@ -35,44 +35,27 @@ const App = () => {
   const [loggedIn, setloggedIn] = React.useState(false);
   const [headerType, setheadertype] = React.useState("");
   const [infoTooltipType, setinfoTooltipType] = React.useState("");
+  const [infoTooltipText, setinfoTooltipText] = React.useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     handleTokenCheck();
-    api.getUserInfo()
-      .then((data) => {
-        setcurrentUser(data)
-      })
-      .catch((err) => console.log(err))
-    api.getCardsInfo()
-      .then((data) => {
-        const newCards = data.map((card) => {
-          return {
-            _id: card._id,
-            link: card.link,
-            name: card.name,
-            likes: card.likes,
-            likesCount: card.likes.length,
-            ownerId: card.owner._id
-          }
-        })
-        setcards(newCards)
-      })
-      .catch((err) => console.log(err))
   }, [])
 
   const handleTokenCheck = () => {
-    if (localStorage.getItem('jwt')) {
-      const jwt = localStorage.getItem('jwt');
+    const jwt = localStorage.getItem('jwt');
+    if (jwt) {
       auth.checkToken(jwt)
         .then((res) => {
           if (res) {
             setloggedIn(true);
             setheadertype("main");
             setcurrentEmail(res.data.email);
-            navigate("/main", { replace: true })
+            navigate("/main", { replace: true });
+            setMainInfo();
           }
         })
+        .catch((err) => console.log(err))
     } else {
       setheadertype("login")
       navigate("/sign-in", { replace: true })
@@ -184,6 +167,28 @@ const App = () => {
       .catch((err) => console.log(err))
       .finally(() => { setisLoading(false) })
   }
+  const setMainInfo = () => {
+    api.getUserInfo()
+      .then((data) => {
+        setcurrentUser(data)
+      })
+      .catch((err) => console.log(err))
+    api.getCardsInfo()
+      .then((data) => {
+        const newCards = data.map((card) => {
+          return {
+            _id: card._id,
+            link: card.link,
+            name: card.name,
+            likes: card.likes,
+            likesCount: card.likes.length,
+            ownerId: card.owner._id
+          }
+        })
+        setcards(newCards)
+      })
+      .catch((err) => console.log(err))
+  }
 
   const closeAllPopups = () => {
     setisEditProfilePopupOpen(false)
@@ -205,9 +210,14 @@ const App = () => {
           setheadertype("main");
           setcurrentEmail(email);
           navigate('/main', { replace: true });
+          setMainInfo();
         }
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        setinfoTooltipType("auth-failed")
+        setinfoTooltipText(err)
+        setisInfoTooltipOpen(true)
+      });
   }
 
   const headerButtonClick = (type) => {
@@ -234,15 +244,19 @@ const App = () => {
     auth.register(password, email)
       .then((res) => {
         if (res.ok) {
-          setinfoTooltipType("success");
-        } else { setinfoTooltipType("failed") }
-        setisInfoTooltipOpen(true)
+          setinfoTooltipType("reg-success")
+          setinfoTooltipText("Вы успешно зарегистрировались!")
+        }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        setinfoTooltipType("reg-failed")
+        setinfoTooltipText("Что-то пошло не так! Попробуйте ещё раз.")
+      })
+      .finally(() => { setisInfoTooltipOpen(true) })
   }
 
   const closeInfoTooltip = (type) => {
-    if (type === "success") {
+    if (type === "reg-success" || type === "auth-failed") {
       navigate('/sign-in', { replace: true });
     } else {
       navigate('/sign-up', { replace: true });
@@ -259,7 +273,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={loggedIn ? <Navigate to="/main" replace /> : <Navigate to="/sign-up" replace />} />
           <Route path="/main" element={<ProtectedRouteElement
-            element={Main} 
+            element={Main}
             cards={cards}
             onEditProfile={handleEditProfileClick}
             onAddPlace={handleAddPlaceClick}
@@ -302,6 +316,7 @@ const App = () => {
           isOpen={isInfoTooltipOpen}
           type={infoTooltipType}
           onClose={closeInfoTooltip}
+          text={infoTooltipText}
         />
       </div>
     </CurrentUserContext.Provider >

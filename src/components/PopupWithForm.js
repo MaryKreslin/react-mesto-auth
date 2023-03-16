@@ -3,22 +3,14 @@ import FormValidator from "../utils/FormValidator";
 import { validationConfig } from "../utils/utils";
 function PopupWithForm(props) {
   const popupRef = React.useRef();
-  const [classOpen, setClassOpen] = React.useState("");
-
-
+ 
   React.useEffect(() => {
     const PopupValidator = new FormValidator(validationConfig, popupRef.current);
     PopupValidator.enableValidation();
   }, [props.isOpen])
 
-  React.useEffect(() => {
-    if (props.isOpen) {
-      setClassOpen("popup_opened")
-    } else { setClassOpen("") }
-  }, [props.isOpen])
-
   return (
-    <div className={`popup popup_type_${props.name} ${classOpen}`}>
+    <div className={`popup popup_type_${props.name} ${props.isOpen ? "popup_opened": ""}`}>
       <form ref={popupRef} className="popup__content" name={props.name} onSubmit={props.onSubmit}>
         <button aria-label="Закрыть" className="popup__close-button" type="button" onClick={props.onClose}></button>
         <h2 className="popup__title">{props.title}</h2>

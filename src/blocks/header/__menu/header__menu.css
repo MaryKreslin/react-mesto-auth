@@ -1,6 +1,7 @@
 .header__menu {
-    width: 24px;
-    height: 18px;
+    margin: 0;
+    padding: 0;
+     background-color: transparent;
 }
 
 .header__menu:hover {

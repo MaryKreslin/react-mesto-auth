@@ -4,32 +4,25 @@ import failed from "../images/auth-failed.png";
 
 const InfoTooltip = (props) => {
 
-    const [classOpen, setClassOpen] = React.useState("");
-    const [type, setType] = React.useState({ infoImage: {}, infoText: "" });
+    const [infoImage, setinfoImage] = React.useState();
 
     React.useEffect(() => {
-        if (props.isOpen) {
-            setClassOpen("popup_opened")
-        } else { setClassOpen("") }
-    }, [props.isOpen])
-
-    React.useEffect(() => {
-        if (props.type === "success") {
-            setType({ infoImage: success, infoText: "Вы успешно зарегистрировались!" })
+        if (props.type === "reg-success") {
+            setinfoImage( success )
         } else {
-            setType({ infoImage: failed, infoText: "Что-то пошло не так! Попробуйте ещё раз." })
+            setinfoImage( failed )
         }
     }, [props.type])
 
     const handleClose = () => { props.onClose(props.type) }
 
     return (
-        <div className={`popup popup_type_infoTooltip ${classOpen}`}>
+        <div className={`popup popup_type_infoTooltip ${props.isOpen ? "popup_opened" : ""}`}>
             <form className="popup__content popup__content_type_info">
                 <button aria-label="Закрыть" className="popup__close-button" type="button" onClick={handleClose}></button>
                 <fieldset className="popup__fieldset popup__fielset_type_info">
-                    <img src={type.infoImage} className="popup__infoImage" alt="" />
-                    <p className="popup__title popup__title_type_info">{type.infoText}</p>
+                    <img src={infoImage} className="popup__infoImage" alt="" />
+                    <p className="popup__title popup__title_type_info">{props.text}</p>
                 </fieldset>
             </form>
         </div>
