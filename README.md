@@ -7,4 +7,4 @@
 Nested БЭМ, JavaScript, JSX, API, Используются принципы ООП.
 
 ### Ссылка на проект
-https://marykreslin.github.io/mesto-react/
+ https://marykreslin.github.io/react-mesto-auth/
